@@ -1,0 +1,28 @@
+{
+  "name": "x1-basketball",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:client": "npm run dev -w @x1/client",
+    "dev:server": "npm run dev -w @x1/server",
+    "typecheck": "tsc -p apps/client/tsconfig.json && tsc -p apps/server/tsconfig.json && tsc -p packages/shared/tsconfig.json",
+    "build": "npm run typecheck && npm run build -w @x1/client && npm run build -w @x1/server",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^24.0.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.5"
+  }
+}
