@@ -2,6 +2,8 @@
 
 Consulta: 21/10/2026. Nenhuma infraestrutura publicada ou serviço contratado.
 
+O treino padrão roda inteiramente no navegador e `npm run dev` inicia apenas Vite. Não cria salas, requisições ao Worker ou WebSockets de partida; portanto não consome Durable Objects. As estimativas abaixo se aplicam somente ao modo online opcional e não foram medidas nesta atualização.
+
 ## Limites consultados
 Workers Free: 100 mil requisições/dia, CPU de 10 ms por invocação comum e memória de 128 MB.
 Durable Objects SQLite: 100 mil requisições/dia, 13 mil GB-s/dia, 5 milhões de linhas lidas/dia, 100 mil escritas/dia, 5 GB na conta.

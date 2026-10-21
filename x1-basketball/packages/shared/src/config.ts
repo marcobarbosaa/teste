@@ -9,5 +9,5 @@ export const GAME_RULES = {
   overtimeSeconds: 60, insidePoints: 2, outsidePoints: 3,
 } as const;
 export const CONTROLS = { forward: 'KeyW', backward: 'KeyS', left: 'KeyA', right: 'KeyD',
-  sprint: 'ShiftLeft', shotOrBlock: 'Space', dribbleOrStance: 'KeyJ', protectOrSteal: 'KeyK' } as const;
+  sprint: 'ShiftLeft', shotOrBlock: 'Space', dribbleOrStance: 'KeyJ', protectOrSteal: 'KeyK', recover: 'KeyR' } as const;
 

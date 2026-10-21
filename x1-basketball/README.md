@@ -1,62 +1,72 @@
 # X1 Basketball
 
-Projeto independente em TypeScript. Desenvolvimento incremental; etapas 0 e 1 autorizadas. Nenhuma alteração no site principal.
+Treino individual de basquete 3D no navegador. Abre diretamente em uma meia quadra de rua, com personagem, drible, arremesso, colisões e estatísticas. A base multiplayer com Cloudflare Durable Objects permanece disponível em uma entrada opcional.
 
-## Execução local
+## Executar no VSCode
 
-Node.js 22.12+ (testado com Node 24) e npm. No VSCode, abra esta pasta e execute:
+Abra a pasta `x1-basketball` no VSCode. Use Node.js 22.12+ (validado com Node 24) e, no terminal integrado:
 
 ```sh
-npm install
-npm run build
+npm ci
 npm run dev
 ```
 
-Cliente: http://localhost:5173. Worker: http://127.0.0.1:8787/api/health.
-O Vite encaminha `/api` e WebSockets para o Worker local (workerd/SQLite), sem conta Cloudflare.
+Abra **http://localhost:5173**. O comando inicia somente o Vite: o treino não precisa de conta, sala, outro jogador, internet ou Worker. Não restaura sessões nem segue convites antigos. Se já houver uma instância antiga na porta 5173, encerre aquele terminal e execute o comando novamente.
+
+O padrão é `VITE_ENABLE_MULTIPLAYER=false`. Exemplo em `apps/client/.env.example`. Variáveis `VITE_*` são públicas e resolvidas na inicialização/build. `npm run dev` fixa o padrão solo; `dev:multiplayer` habilita explicitamente o online. Para usar `.env.local` diretamente, execute `npm run dev:client`.
+
+| Controle | Treino |
+|---|---|
+| WASD | Movimento relativo à câmera |
+| Shift + WASD | Corrida e drible mais rápido |
+| Espaço | Segure e solte próximo do centro verde para arremessar |
+| R | Recuperar a bola, mantendo as estatísticas |
+| Reiniciar treino | Zerar cestas/tentativas e voltar ao início |
+| Tela cheia | Entrar/sair com a Fullscreen API; Esc também sai |
+
+A bola livre pode ser recuperada por proximidade e retorna automaticamente após 10 segundos. A zona verde melhora a trajetória; não garante pontos. A cesta exige passagem descendente completa pelo interior do aro. Estatísticas pertencem à sessão local e não são salvas após recarregar.
+
+## Verificação
 
 ```sh
 npm run typecheck
 npm test
+npm run build
 npx playwright install chromium
 npm run test:e2e
+npm run test:e2e:multiplayer
 ```
 
-`build` inclui empacotamento do Worker em dry-run; não publica infraestrutura.
+`build` verifica tipos, gera o cliente e empacota o Worker com `wrangler deploy --dry-run`; não publica. E2E solo inicia apenas Vite na porta 5183. E2E online inicia Vite 5184 e Worker 8887, usando WebSockets e Durable Objects reais locais. Ambos encerram os serviços que iniciaram, sem reutilizar o servidor de desenvolvimento. Capturas são geradas em `artifacts/` (ignoradas pelo Git).
 
-## Testar com dois jogadores
+## Multiplayer preservado
 
-1. Execute os comandos acima na pasta `x1-basketball` (não no diretório pai).
-2. Abra `http://localhost:5173`, informe seu apelido e clique em **Criar minha quadra**.
-3. Em outro navegador ou janela anônima, abra o convite ou escolha **Entrar com código**.
-4. Informe outro apelido. Clique em **Estou pronto** nos dois clientes.
-5. Use **WASD**. Cada navegador controla apenas sua própria vaga; a câmera fica atrás do personagem local.
-6. Atualize um cliente. Ele recupera a vaga pelo token da mesma aba; ambos confirmam novamente.
-7. Abra um terceiro navegador e tente entrar: a sala deve rejeitar. Apelido igual não permite assumir vaga.
+```sh
+npm run dev:multiplayer
+```
 
-O código possui 12 caracteres hexadecimais. Não use uma aba duplicada que compartilhe a mesma sessão como segundo jogador; prefira janela anônima ou outro navegador. **Sair** apaga o token local e não libera a vaga para terceiros; crie outra sala para trocar participantes. Uma sala vazia é removida em até aproximadamente 60 segundos; tokens expiram em 30 minutos.
+Cliente em http://localhost:5173 e Worker em http://127.0.0.1:8787/api/health. A entrada antiga reaparece somente nesse modo:
 
-## Dois computadores na mesma rede
+1. Informe apelido e escolha **Criar minha quadra**.
+2. Abra o convite em outro navegador ou janela anônima e informe outro apelido.
+3. Confirme **Estou pronto** nos dois clientes e movimente com WASD.
+4. Recarregar recupera a vaga pelo token da aba; os dois confirmam novamente. Um terceiro participante é rejeitado.
 
-Vite escuta em `0.0.0.0:5173`; o Worker permanece no loopback e é acessado pelo proxy. Copie `apps/server/.dev.vars.example` para `.dev.vars`, acrescente `http://IP-DO-COMPUTADOR:5173` em `ALLOWED_ORIGINS` e reinicie `npm run dev`. Acesse esse endereço nos dois computadores. O firewall deve permitir a porta 5173 na rede escolhida. Não exponha o servidor de desenvolvimento na internet.
+O online continua no estágio de movimentação de dois jogadores. Bola, arremesso e estatísticas desta atualização existem no treino; migrá-los para a autoridade do servidor é trabalho futuro. Worker, DO, autenticação, `GameConnection`, sessões e protocolo permanecem preservados.
 
-`localhost` não funciona como convite entre computadores. Para internet será necessário implantar o build e o Worker com DO em HTTPS/WSS, ajustar origens e proteção de criação. Nenhuma infraestrutura foi publicada nesta entrega; validação entre máquinas e redes reais continua pendente.
+Código de sala: 12 caracteres hexadecimais. Não use aba duplicada com a mesma sessão como segundo jogador. **Sair** apaga o token local e não libera a vaga para terceiros; crie outra sala para trocar participantes. Tokens expiram em 30 minutos; salas vazias são removidas em aproximadamente 60 segundos.
 
-## Comandos e diagnóstico
+Para dois computadores na mesma rede: copie `apps/server/.dev.vars.example` para `.dev.vars`, inclua `http://IP-DO-COMPUTADOR:5173` em `ALLOWED_ORIGINS` e reinicie `npm run dev:multiplayer`. O Vite atende na rede; o Worker fica no loopback, atrás do proxy. Use o IP no convite e permita a porta 5173 no firewall da rede escolhida. Validação entre máquinas físicas permanece pendente.
 
-- `npm ci`: reinstala as versões verificadas do lockfile.
-- `npm run dev`: inicia cliente e Worker juntos; Ctrl+C encerra ambos.
-- `npm run dev:client` / `npm run dev:server`: terminais separados, se preferir.
-- `npm run build`: verifica tipos, gera cliente e empacota Worker sem deploy.
-- `npm test`: testes unitários de protocolo, regras de sessão e movimento.
-- `npm run test:e2e`: inicia os serviços locais e testa Chromium/Workers com WebSockets reais. Encerra os serviços que iniciou.
-- `npm audit`: auditoria de dependências.
+Portas alternativas em PowerShell: `$env:X1_DEV_PORT='5175'` antes de `npm run dev`. Para online, `X1_SERVER_PORT` muda a porta do Worker; `ALLOWED_ORIGINS` permite informar a lista de origens. Nenhuma implantação pública foi feita.
 
-Se as portas 5173/8787 estiverem ocupadas, encerre a instância anterior. Se a cena 3D não abrir, habilite WebGL/aceleração gráfica. O cache SQLite local fica em `apps/server/.wrangler`, ignorado pelo Git. A etapa 1 tem chão de referência e personagens provisórios; ainda não é uma partida de basquete completa.
+## Arquitetura e limites
 
-## Documentação
+`App` escolhe a entrada. A cena recebe `GameController`, implementado por `LocalGameController` ou `RemoteGameController`. O primeiro executa `TrainingSimulation` com passo fixo de 1/120 s; o segundo adapta os snapshots e comandos do `GameConnection`. Movimento, trajetória, colisões e sensor de cesta são funções TypeScript em `packages/shared/src/gameplay`, sem React, Three ou rede. A HUD recebe apenas estatísticas a 20 Hz.
 
-[Arquitetura](docs/ARCHITECTURE.md) · [Regras](docs/GAME_RULES.md) · [Controles](docs/CONTROLS.md) · [Progresso](docs/PROGRESS.md) · [Integração](docs/INTEGRATION.md) · [Custos](docs/COSTS.md)
+Geometria procedural leve; rede da cesta estática, animações simples, colisão da bola aproximada por esfera/toro/caixa e subpassos. Sem áudio, adversário, regras competitivas, persistência ou integração ao site principal. Em máquinas muito lentas o acumulador limita o avanço para evitar saltos. Testes Chromium usam WebGL por software e não comprovam 60 FPS em hardware real.
 
-Etapas 2–9 dependem de autorização. O arquivo removido `index.html` no diretório pai não foi restaurado nem alterado.
+Falha na cena mostra uma opção de remontagem. Em desenvolvimento, **Detalhes do erro** e o console apresentam a exceção real. Perda de contexto WebGL é diferenciada de falha JavaScript; a aplicação não atribui automaticamente qualquer erro à aceleração gráfica. O bundle Three/Fiber ainda gera aviso de tamanho no build.
+
+[Arquitetura](docs/ARCHITECTURE.md) · [Treinamento e física](docs/TRAINING.md) · [Regras](docs/GAME_RULES.md) · [Controles](docs/CONTROLS.md) · [Progresso](docs/PROGRESS.md) · [Integração](docs/INTEGRATION.md) · [Custos](docs/COSTS.md)
 

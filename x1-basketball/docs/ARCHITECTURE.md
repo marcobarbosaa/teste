@@ -6,7 +6,13 @@ Apenas o navegador importa Three/Fiber. O servidor usa APIs Web e Cloudflare, se
 
 Compatibilidade: [Fiber 9 e React 19](https://r3f.docs.pmnd.rs/getting-started/installation), [Vite](https://vite.dev/guide/), [DO WebSockets](https://developers.cloudflare.com/durable-objects/best-practices/websockets/). Verificado em 21/10/2026; versões exatas no lockfile.
 
-Etapa 0: cena básica e endpoints de saúde do Worker e DO. Etapa 1 adicionará duas conexões reais e movimentação. Física de bola, aro, pontuação e colisões ficam para etapas autorizadas posteriores.
+Etapas 0 e 1 concluídas. A atualização de treino individual acrescenta movimento, bola, aro, colisões e contagem de cestas localmente. O online mantém seu protocolo e simulação anteriores.
+
+## Entrada padrão de treino
+
+`App` escolhe `TrainingGame` ou carrega `OnlineApp` sob `VITE_ENABLE_MULTIPLAYER=true`. A primeira entrada não lê sessão nem abre transporte. A cena e o teclado dependem de `GameController`; `LocalGameController` executa a simulação pura em passo fixo de 1/120 s, enquanto `RemoteGameController` adapta `GameConnection` sem mudar sua autenticação ou snapshots.
+
+`packages/shared/src/gameplay` separa movimento, câmera, posse, lançamento, física, colisões, sensor geométrico e orquestração. A normalização de direção é compartilhada com o movimento online. Dimensões físicas e visuais usam as mesmas constantes. Three e React não entram nas regras; a cena consulta posições interpoladas, e apenas o HUD recebe snapshots React a 20 Hz. Detalhes em [TRAINING.md](TRAINING.md).
 
 ## Implementação da etapa 1
 
@@ -29,7 +35,7 @@ Enquanto aguardando não há loop de simulação. Um alarme a cada 30 s verifica
 
 Persistência só nas transições de entrada, confirmação e desconexão, nunca em cada frame. `setInterval` ativo impede hibernação. Sob saturação, a simulação desacelera em vez de executar um grande salto; medir e refinar antes de implementar relógios competitivos.
 
-Limites atuais: antispam de criação é local por isolate, não distribuído. Produção pública exige revisão da proteção de borda e orçamento. Não há ranking, contas, bola, pontuação ou regras completas. Nenhuma biblioteca de física foi adotada.
+Limites do online: antispam de criação é local por isolate, não distribuído. Produção pública exige revisão da proteção de borda e orçamento. Não há ranking, contas, bola ou pontuação online. Bola e estatísticas locais não são resultados competitivos. Nenhuma biblioteca de física foi adotada.
 
 Riscos: atraso de rede exige interpolação/predição; JavaScript de DO não é servidor de física pesada; timers impedem hibernação; reinício do runtime não pode inventar resultados; sessão de convidado é credencial portadora; implantação pública precisará controles adicionais de abuso e orçamento.
 

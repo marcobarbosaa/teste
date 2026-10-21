@@ -13,7 +13,7 @@ function observe(page: Page) {
 }
 test('dois navegadores independentes: sala, controles isolados, sincronização e reconexão', async ({ browser }) => {
   test.setTimeout(90_000);
-  const options = { baseURL: 'http://127.0.0.1:5173', viewport: { width: 1440, height: 900 } };
+  const options = { baseURL: test.info().project.use.baseURL, viewport: { width: 1440, height: 900 } };
   const a = await browser.newContext(options), b = await browser.newContext(options), c = await browser.newContext(options);
   const pa=await a.newPage(), pb=await b.newPage(), pc=await c.newPage();
   await pb.addInitScript(() => {

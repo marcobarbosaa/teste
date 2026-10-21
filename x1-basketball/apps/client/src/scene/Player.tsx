@@ -1,31 +1,60 @@
-import { useRef } from 'react';
+﻿import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group } from 'three';
-import type { PlayerId } from '@x1/shared';
-import type { GameConnection } from '../network/GameConnection';
+import { angleDelta, type PlayerId } from '@x1/shared';
+import type { GameController } from '../game/GameController';
 
-export function Player({ id, connection }: { id: PlayerId; connection: GameConnection }) {
-  const group = useRef<Group>(null);
+function Limb({ skin, leg = false }: { skin: string; leg?: boolean }) {
+  return <>
+    <mesh position={[0, -.16, 0]} castShadow><capsuleGeometry args={[leg ? .105 : .075, .2, 4, 8]}/><meshStandardMaterial color={leg ? '#273b46' : skin}/></mesh>
+    <mesh position={[0, -.42, 0]} castShadow><capsuleGeometry args={[leg ? .077 : .065, .2, 4, 8]}/><meshStandardMaterial color={skin}/></mesh>
+    {leg ? <mesh position={[0, -.64, -.06]} scale={[1, .6, 1.7]} castShadow><sphereGeometry args={[.12, 12, 8]}/><meshStandardMaterial color="#e7e6d9"/></mesh>
+      : <mesh position={[0, -.59, 0]}><sphereGeometry args={[.075, 10, 8]}/><meshStandardMaterial color={skin}/></mesh>}
+  </>;
+}
+export function Player({ id, controller }: { id: PlayerId; controller: GameController }) {
+  const group = useRef<Group>(null), body = useRef<Group>(null);
+  const leftArm = useRef<Group>(null), rightArm = useRef<Group>(null);
+  const leftLeg = useRef<Group>(null), rightLeg = useRef<Group>(null);
   const initialized = useRef(false);
-  const color = id === 'p1' ? '#ef8b54' : '#92b9eb';
+  const color = id === 'p1' ? '#d66f3b' : '#7ca8d4';
+  const skin = id === 'p1' ? '#b77b59' : '#794e38';
   useFrame((_, delta) => {
-    const point = connection.sample(id, performance.now());
-    if (!point || !group.current) return;
-    const t = initialized.current ? 1 - Math.exp(-22 * Math.min(delta, 0.1)) : 1;
-    group.current.position.x += (point.x - group.current.position.x) * t;
-    group.current.position.z += (point.z - group.current.position.z) * t;
+    const p = controller.samplePlayer(id, performance.now());
+    if (!p || !group.current || !body.current) return;
+    const blend = initialized.current ? 1 - Math.exp(-25 * Math.min(delta, .1)) : 1;
+    group.current.position.x += (p.x - group.current.position.x) * blend;
+    group.current.position.z += (p.z - group.current.position.z) * blend;
+    group.current.rotation.y += angleDelta(group.current.rotation.y, p.yaw) * blend;
+    const stride = Math.sin(p.gait) * Math.min(p.speed / 6, 1) * .65;
+    const shooting = p.pose === 'charge' || p.pose === 'release';
+    const shotPose = p.pose === 'release' ? Math.max(0, 1 - p.actionTime / .65) : 1;
+    body.current.position.y = shooting ? (p.pose === 'charge' ? -.06 : Math.sin(Math.min(1, p.actionTime / .45) * Math.PI) * .13) : Math.abs(Math.sin(p.gait)) * Math.min(p.speed, 4) * .006;
+    if (leftLeg.current) leftLeg.current.rotation.x = shooting ? -.08 : stride;
+    if (rightLeg.current) rightLeg.current.rotation.x = shooting ? -.08 : -stride;
+    if (leftArm.current) {
+      leftArm.current.rotation.x = shooting ? 2.45 * shotPose : -.65 * stride;
+      leftArm.current.rotation.z = shooting ? .42 * shotPose : .09;
+    }
+    if (rightArm.current) {
+      rightArm.current.rotation.x = shooting ? 2.5 * shotPose : p.hasBall ? .5 + Math.max(0, p.handHeight - .85) * .9 : .65 * stride;
+      rightArm.current.rotation.z = shooting ? -.42 * shotPose : p.hasBall ? -.24 : -.09;
+    }
     initialized.current = true;
   });
-  return <group ref={group}>
-    <mesh position={[0, 1.66, 0]} castShadow><sphereGeometry args={[0.21, 16, 12]}/><meshStandardMaterial color={id === 'p1' ? '#ad7353' : '#754e3a'}/></mesh>
-    <mesh position={[0, 1.12, 0]} castShadow><capsuleGeometry args={[0.26, 0.48, 4, 12]}/><meshStandardMaterial color={color}/></mesh>
-    {[-1, 1].map(side => <group key={side}>
-      <mesh position={[side * 0.35, 1.08, 0]} rotation={[0, 0, side * 0.12]} castShadow><capsuleGeometry args={[0.085, 0.52, 4, 8]}/><meshStandardMaterial color={id === 'p1' ? '#ad7353' : '#754e3a'}/></mesh>
-      <mesh position={[side * 0.15, 0.4, 0]} castShadow><capsuleGeometry args={[0.11, 0.55, 4, 8]}/><meshStandardMaterial color="#202b2c"/></mesh>
-      <mesh position={[side * 0.15, 0.09, -0.08]} scale={[1, 0.6, 1.7]} castShadow><sphereGeometry args={[0.13, 12, 8]}/><meshStandardMaterial color="#ece9d9"/></mesh>
-    </group>)}
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}><ringGeometry args={[0.38, 0.43, 32]}/><meshBasicMaterial color={color}/></mesh>
-    <mesh position={[0, 1.23, -0.265]}><planeGeometry args={[0.1, 0.23]}/><meshBasicMaterial color="#fff4de"/></mesh>
+  return <group ref={group} name={'player-' + id}>
+    <group ref={body}>
+      <mesh position={[0, 1.65, 0]} castShadow><sphereGeometry args={[.19, 16, 12]}/><meshStandardMaterial color={skin}/></mesh>
+      <mesh position={[0, 1.76, .015]} scale={[1, .55, 1]} castShadow><sphereGeometry args={[.191, 12, 8]}/><meshStandardMaterial color="#342f2b"/></mesh>
+      <mesh position={[0, 1.46, 0]}><cylinderGeometry args={[.085, .09, .17, 8]}/><meshStandardMaterial color={skin}/></mesh>
+      <mesh position={[0, 1.12, 0]} scale={[1, 1, .8]} castShadow><capsuleGeometry args={[.245, .39, 5, 12]}/><meshStandardMaterial color={color}/></mesh>
+      <mesh position={[0, .79, 0]} castShadow><capsuleGeometry args={[.22, .08, 4, 12]}/><meshStandardMaterial color="#273b46"/></mesh>
+      <group ref={leftArm} position={[-.3, 1.36, 0]} rotation={[0, 0, .09]}><Limb skin={skin}/></group>
+      <group ref={rightArm} position={[.3, 1.36, 0]} rotation={[0, 0, -.09]}><Limb skin={skin}/></group>
+      <group ref={leftLeg} position={[-.13, .72, 0]}><Limb skin={skin} leg/></group>
+      <group ref={rightLeg} position={[.13, .72, 0]}><Limb skin={skin} leg/></group>
+      {[.18, -.2].map(z => <mesh key={z} position={[0, 1.15, z]} rotation={[0, z > 0 ? 0 : Math.PI, 0]}><planeGeometry args={[.055, .19]}/><meshBasicMaterial color="#f4dfb4"/></mesh>)}
+    </group>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, .043, 0]}><ringGeometry args={[.39, .415, 40]}/><meshBasicMaterial color="#f5dcb6" transparent opacity={.65}/></mesh>
   </group>;
 }
-

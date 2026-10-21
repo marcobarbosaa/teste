@@ -1,4 +1,10 @@
-# Regras — especificação, ainda não implementada
+# Regras
+
+## Treino implementado
+
+Um jogador, sem adversário nem relógio. Cada soltura válida soma uma tentativa. A passagem completa da bola pelo interior do aro, de cima para baixo, soma uma cesta, uma vez por lançamento. Aproveitamento = cestas / tentativas. R recupera sem apagar estatísticas; reiniciar zera tudo. Não há valor de 2/3 pontos ou vencedor nesse modo. A soltura altera a trajetória; o medidor não concede cesta. Ver [física do treino](TRAINING.md).
+
+## Especificação competitiva futura, ainda não implementada
 
 Meia quadra, uma cesta e dois jogadores. Dentro do arco: 2 pontos; além: 3.
 Regulamentar: 300 segundos. Meta: alcançar ou ultrapassar 25 pontos.
