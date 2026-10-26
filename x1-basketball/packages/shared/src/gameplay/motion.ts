@@ -1,6 +1,7 @@
 import { normalizeDirection } from '../movement';
 import type { MovementInput, VisualPlayer } from './types';
 import { COURT, HOOP, TRAINING } from './config';
+import { stepLocomotion } from './locomotion';
 export interface Velocity2 { x: number; z: number }
 export function angleDelta(from: number, to: number) { return Math.atan2(Math.sin(to - from), Math.cos(to - from)); }
 export function towardHoopYaw(x: number, z: number) { return Math.atan2(x - HOOP.x, z - HOOP.z); }
@@ -21,6 +22,7 @@ export function stepPlayer(player: VisualPlayer, velocity: Velocity2, input: Mov
   const limit = (moving ? TRAINING.acceleration : TRAINING.deceleration) * dt;
   const dx = targetX - velocity.x, dz = targetZ - velocity.z, change = Math.hypot(dx, dz);
   const factor = change > limit ? limit / change : 1;
+  const oldX=velocity.x,oldZ=velocity.z;
   velocity.x += dx * factor; velocity.z += dz * factor;
   player.x += velocity.x * dt; player.z += velocity.z * dt;
   boundPlayer(player, velocity);
@@ -30,5 +32,6 @@ export function stepPlayer(player: VisualPlayer, velocity: Velocity2, input: Mov
   const yaw = towardHoopYaw(player.x, player.z);
   player.yaw += angleDelta(player.yaw, yaw) * (1 - Math.exp(-8 * dt));
   player.pose = charging ? 'charge' : player.speed > 0.1 ? 'move' : 'idle';
+  stepLocomotion(player,velocity,{x:(velocity.x-oldX)/dt,z:(velocity.z-oldZ)/dt},input,dt);
 }
 

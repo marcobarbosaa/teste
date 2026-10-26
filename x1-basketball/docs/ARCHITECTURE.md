@@ -10,6 +10,8 @@ Etapas 0 e 1 concluídas. A atualização de treino individual acrescenta movime
 
 ## Entrada padrão de treino
 
+No protótipo 3.0, `actions.ts` mantém as fases da finalização e `locomotion.ts` mantém os apoios/velocidade/postura. Esses estados vivem na simulação pura. `PlayerRig` apenas resolve o rig para os alvos da simulação; não inicia saltos ou arremessos. O PRNG tem seed serializável; a tabela recebe CCD por distância esfera/caixa, sem motor externo. Detalhes e limitações em [PROTOTYPE_3.md](PROTOTYPE_3.md).
+
 `App` escolhe `TrainingGame` ou carrega `OnlineApp` sob `VITE_ENABLE_MULTIPLAYER=true`. A primeira entrada não lê sessão nem abre transporte. A cena e o teclado dependem de `GameController`; `LocalGameController` executa a simulação pura em passo fixo de 1/120 s, enquanto `RemoteGameController` adapta `GameConnection` sem mudar sua autenticação ou snapshots.
 
 `packages/shared/src/gameplay` separa movimento, câmera, posse, lançamento, física, colisões, sensor geométrico e orquestração. A normalização de direção é compartilhada com o movimento online. Dimensões físicas e visuais usam as mesmas constantes. Three e React não entram nas regras; a cena consulta posições interpoladas, e apenas o HUD recebe snapshots React a 20 Hz. Detalhes em [TRAINING.md](TRAINING.md).

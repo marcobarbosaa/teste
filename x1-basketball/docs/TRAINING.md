@@ -1,5 +1,7 @@
 # Treinamento individual
 
+Atualizado pelo [protótipo 3.0](PROTOTYPE_3.md): estados de locomoção e ação separados; rig articulado; E para finalizar; F para fintar; soltura após preparação; varredura contínua da tabela e dispersão com seed explícita.
+
 ## Fluxo e fontes de estado
 
 `App.tsx` não abre sockets. Com flag ausente ou diferente de `true`, monta `TrainingGame`, um único controlador local e p1. Só a entrada `OnlineApp` importa sessão, Lobby e GameConnection. Links de convite e sessionStorage não mudam a escolha. O WebSocket do HMR do Vite é ferramenta de desenvolvimento, não conexão de partida.
@@ -15,13 +17,15 @@ A câmera combina posição do jogador e cesta, suaviza yaw e deslocamento e lim
 ## Bola e arremesso
 
 - `possession.ts`: posse real, altura de drible sincronizada com a velocidade e chão mínimo. Inicia o drible no alto e suaviza o retorno à mão/preparação. Bola em posse tem trajetória prescrita, sem dinâmica de mão completa.
-- `shooting.ts`: resolve velocidade balística até a altura do aro na descida. Timing, distância, velocidade e orientação alteram o alvo físico. Sem sorteio de acerto. Medidor vai de 0 a 1 em 1,1 s; ponto ideal 0,72, faixa verde ±0,07.
+- `shooting.ts`: resolve velocidade balística até a altura do aro na descida, com arco reduzido para finalizações próximas e solução de reflexão para bandeja na tabela. Timing, distância, velocidade, orientação e tipo alteram o alvo físico. Dispersão determinística pelo estado de `random.ts`, sem sorteio de acerto nem alternância por tentativa. Medidor vai de 0 a 1 em 1,1 s; ponto ideal 0,72, faixa verde ±0,07; feedback de soltura muito cedo/boa/excelente/muito tarde.
 - `ballPhysics.ts`: gravidade 9,81 m/s², integração parabólica, subpassos por distância percorrida e atrito no chão. O solver não aplica resistência do ar, compatível com a solução do lançamento.
-- `collisions.ts`: esfera contra caixa da tabela, toro do aro, piso, poste e cercas laterais/fundo. Resolve penetração, normal de impacto e restituição. Medidas de aro, tabela e bola vêm das mesmas constantes usadas nos meshes.
+- `boardCollision.ts` + `collisions.ts`: varredura conservadora esfera/caixa, incluindo faces, arestas e cantos; impulso no instante do impacto e continuação do tempo restante. Toro do aro, piso, poste e cercas mantêm subpassos/contato discreto. Posição em posse e interpolação também são limitadas pela caixa. Dimensões físicas e visuais são compartilhadas, inclusive o contorno externo das costuras da bola.
 - `scoring.ts`: registra entrada acima do aro e saída abaixo dele, na descida, com folga suficiente para o raio da bola. Um `shotId` só pode marcar uma vez. Proximidade, subida e entrada lateral não contam. Um toque no aro invalida a travessia em curso, que precisa recomeçar por cima.
 - `TrainingSimulation.ts`: orquestra estados `held`, `dribbling`, `flight`, `loose`, carga, soltura, contatos, estatísticas e recuperação. Comandos não decidem pontuação.
+- `actions.ts`: seleção contextual, preparação, execução, soltura, aterrissagem e recuperação. Salto balístico do corpo e condução contínua da bola até a mão de finalização. Bloqueia sobreposição de ações e segunda bola.
+- `locomotion.ts`: caminhada/corrida/lateral/recuo/frenagem/pivô, apoio e balanço dos pés, inclinação e torção. `PlayerRig` resolve joelhos e cotovelos por cinemática inversa e usa a mesma bola interpolada do renderizador.
 
-R recoloca a bola na posse; recuperação por proximidade exige bola livre e baixa. Retorno automático após 10 s evita treino preso. Reiniciar limpa estatísticas e reposiciona jogador. Perda de foco cancela a preparação sem tentativa e zera movimento. Segurar além da faixa verde termina no máximo do medidor, produzindo soltura tardia.
+R recoloca a bola na posse, aguardando terminar uma ação em andamento; recuperação por proximidade exige bola livre e baixa. Retorno automático após 10 s evita treino preso. Reiniciar limpa estatísticas e reposiciona jogador. Perda de foco cancela a carga sem tentativa e zera movimento; uma ação já comprometida termina. Segurar além da faixa verde termina no máximo do medidor, produzindo soltura tardia sem travar.
 
 ## Visual e diagnóstico
 

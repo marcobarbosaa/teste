@@ -54,7 +54,9 @@ test('medidor acompanha a carga com relógio real do navegador', async ({ page }
   await expect(page.getByTestId('attempts')).toHaveText('1');
   await expect(page.getByRole('meter')).toHaveCount(0);
   await page.keyboard.press('r');
-  expect((await read(page)).player.hasBall).toBe(true);
+  // R agenda a recuperação até terminar a finalização/aterrissagem.
+  await expect.poll(async () => (await read(page)).player.hasBall).toBe(true);
+  expect((await read(page)).player.action).toBeUndefined();
 });
 test('drible, perda de foco e Fullscreen API', async ({ page }) => {
   test.setTimeout(90_000);

@@ -1,5 +1,33 @@
 # Progresso
 
+## Protótipo 3.0 — 22/10/2026
+
+Base: commit `42830fc`, sem alterações pendentes ao iniciar. Implementação incremental A/B/C, preservando solo padrão, cenário, monorepo e infraestrutura online. Detalhes, limites e relação de arquivos em [PROTOTYPE_3.md](PROTOTYPE_3.md).
+
+- **Bloco A:** investigação de geometria, física e interpolação; 252 trajetórias comuns sem reproduzir travessia. Reprodução isolada do limite discreto em estresse artificial de 1.200 m/s; varredura contínua esfera/caixa e resposta no instante de impacto. Ajustado envelope visual da bola e removido atraso adicional entre jogador e bola. 50 testes e impacto instrumentado no navegador aprovados antes de B.
+- **Bloco B:** locomoção separada da ação; caminhada/corrida/lateral/recuo/frenagem/pivô; pés com apoio e balanço; rig com joelhos/cotovelos, inclinação e rotação discreta. Primeiro teste detectou deslizamento na fase inicial; corrigida a fase de partida. Cinco testes específicos e E2E de movimento aprovados, capturas inspecionadas antes de C.
+- **Bloco C:** curta, bandeja esquerda/direita, enterrada por elegibilidade e finta; preparação/execução/soltura/aterrissagem/recuperação; R aguarda o término. PRNG serializável substitui alternância lateral. Salto, mão e bola acompanham o estado real. Câmera ajusta altura discretamente. Testes de bandeja com tabela e enterrada no navegador usam teclado e relógio, sem mutar o estado do jogo.
+
+Problemas encontrados na verificação completa: captura antiga `treino-1920.png` indisponível para sobrescrita no Windows (novas capturas usam prefixo v3); teste antigo de R atualizado para aguardar a aterrissagem; configuração E2E online passou a aguardar `/api/health`, pois a porta do Vite podia abrir antes do Worker.
+
+A repetição completa também revelou um erro físico de curta distância: soltura junto à borda produzia colisão na face inferior do aro durante a subida. Corrigido o alvo da mão na preparação conforme a distância; 25 posições verificadas em regressão permanente, mantendo trajetória física e contagem única. Após o usuário esclarecer que observou a tabela em arremessos longos, foram comparados 54 lançamentos nas versões 2.0/3.0, sem penetração detectada. Dois E2E adicionais cobrem soltura antecipada com impacto e soltura ideal com cesta.
+
+Nenhuma dependência adicionada, nenhum serviço publicado, nenhum arquivo do servidor/transporte/protocolo ou do site principal alterado. A sequência específica do relato original da tabela ainda não foi identificada; não se confunde o caso artificial de estresse com a causa daquele relato. O comportamento corrigido foi verificado também em bandeja real pela tabela.
+
+### Validação final do protótipo 3.0
+
+| Verificação | Resultado |
+|---|---|
+| `npm run typecheck` | Aprovado, repetido dentro do build final |
+| `npm test` | **71 testes em 8 arquivos**, 1,78 s |
+| `npm run build` | Cliente e Worker dry-run aprovados; sem publicação |
+| `npm run test:e2e` | **16 testes aprovados**, 6,6 min, após corrigir a soltura curta |
+| `npm run test:e2e:multiplayer` | **4 testes aprovados**, 1,4 min; Worker/DO e sockets locais reais |
+| `git diff --check` | Aprovado |
+| Inspeção visual | Quadra 1366/1920, corrida/lateral, fases da enterrada, bandeja, finta, curta e arremessos longos inspecionados |
+
+Os avisos de proxy durante a interrupção deliberada de sockets não impediram os testes multiplayer. O build mantém o aviso conhecido de tamanho do Three/Fiber: 894,87 kB minificados / 242,78 kB gzip. Worker: 17,28 KiB / 5,34 KiB gzip. Diagnóstico físico não é emitido como chunk de produção. Sem benchmark em GPU física.
+
 ## Atualização autorizada — treinamento individual (21/10/2026)
 
 Os blocos A, B e C substituem a experiência padrão da etapa 1 pelo treino solo. O histórico abaixo registra a entrega anterior; suas pendências de quadra, bola, corrida e arremesso foram atendidas localmente nesta atualização. Nenhuma mecânica competitiva adicional foi implementada.

@@ -2,6 +2,8 @@
 
 Treino individual de basquete 3D no navegador. Abre diretamente em uma meia quadra de rua, com personagem, drible, arremesso, colisões e estatísticas. A base multiplayer com Cloudflare Durable Objects permanece disponível em uma entrada opcional.
 
+**Protótipo 3.0:** locomoção com apoio dos pés, joelhos/cotovelos articulados, arremesso curto, bandeja, enterrada contextual e finta. A soltura acompanha as fases da ação, e a tabela usa varredura contínua da bola. [Diagnóstico, parâmetros e validação](docs/PROTOTYPE_3.md).
+
 ## Executar no VSCode
 
 Abra a pasta `x1-basketball` no VSCode. Use Node.js 22.12+ (validado com Node 24) e, no terminal integrado:
@@ -20,11 +22,17 @@ O padrão é `VITE_ENABLE_MULTIPLAYER=false`. Exemplo em `apps/client/.env.examp
 | WASD | Movimento relativo à câmera |
 | Shift + WASD | Corrida e drible mais rápido |
 | Espaço | Segure e solte próximo do centro verde para arremessar |
+| E | Finalização contextual: curta, bandeja ou enterrada |
+| F | Finta de arremesso com posse, sem lançar |
 | R | Recuperar a bola, mantendo as estatísticas |
 | Reiniciar treino | Zerar cestas/tentativas e voltar ao início |
 | Tela cheia | Entrar/sair com a Fullscreen API; Esc também sai |
 
 A bola livre pode ser recuperada por proximidade e retorna automaticamente após 10 segundos. A zona verde melhora a trajetória; não garante pontos. A cesta exige passagem descendente completa pelo interior do aro. Estatísticas pertencem à sessão local e não são salvas após recarregar.
+
+Para enterrar, aproxime-se correndo com Shift + W e pressione E enquanto ainda tem impulso, aproximadamente entre 0,65 e 2,35 m do aro, pela frente e bem orientado. Com aproximação moderada, E faz bandeja; próximo e parado, faz arremesso curto. F é ignorado durante carga de Espaço ou uma finalização. R durante a finalização aguarda a aterrissagem; reiniciar treino cancela tudo imediatamente.
+
+Em desenvolvimento, `http://localhost:5173/?physics=1` mostra caixa da tabela, esfera, trajetória, normal e último contato. Acrescente `&scenario=board-front` para reproduzir um lançamento de diagnóstico (também `board-back`, `board-side`, `board-corner` e `board-fast`). O último é um estresse artificial de 1.200 m/s, não uma jogada normal. Esses recursos ficam excluídos da entrada de produção.
 
 ## Verificação
 

@@ -7,6 +7,12 @@ const Scene = lazy(() => import('../scene/Scene').then(module => ({ default: mod
 
 export function TrainingGame() {
   const [controller] = useState(() => new LocalGameController());
+  const debug=import.meta.env.DEV && new URLSearchParams(location.search).get('physics')==='1';
+  useEffect(()=>{
+    if(!debug)return;
+    const name=new URLSearchParams(location.search).get('scenario');
+    if(name) void import('./debugScenarios').then(({loadDebugScenario})=>{loadDebugScenario(controller.simulation,name);});
+  },[controller,debug]);
   useKeyboard(controller, true);
   useEffect(() => {
     if (import.meta.env.VITE_TEST_MODE !== 'true') return;
@@ -20,6 +26,7 @@ export function TrainingGame() {
       <Scene controller={controller} ids="p1" active/>
     </Suspense></SceneBoundary>
     <TrainingHud controller={controller}/>
+    {debug && <output id="physics-contact" style={{position:'absolute',left:28,top:115,color:'#fff',background:'#142923',padding:8,fontSize:12}}>Depuração física</output>}
   </main>;
 }
 

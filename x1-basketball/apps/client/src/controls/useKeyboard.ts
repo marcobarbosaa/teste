@@ -26,6 +26,8 @@ export function useKeyboard(controller: GameController, enabled: boolean) {
         if (!event.repeat) controller.command(event.type === 'keydown' ? 'charge' : 'release');
       } else if (controller.mode === 'training' && event.code === CONTROLS.recover && event.type === 'keydown' && !event.repeat) {
         event.preventDefault(); controller.command('recover');
+      } else if(controller.mode==='training' && (event.code===CONTROLS.finish || event.code===CONTROLS.fake) && event.type==='keydown' && !event.repeat){
+        event.preventDefault();controller.command(event.code===CONTROLS.finish?'finish':'fake');
       }
     };
     const release = () => { held.clear(); controller.setMovement(zero); controller.command('cancel'); controller.flushInput(); };

@@ -1,5 +1,6 @@
-import { BALL } from './config';
-import { collideBall } from './collisions';
+import { BALL, CONTACT } from './config';
+import { collideBall, respond } from './collisions';
+import { sweepBoard } from './boardCollision';
 import { detectBasket } from './scoring';
 import type { BallState } from './types';
 
@@ -12,10 +13,18 @@ export function stepBall(ball: BallState, dt: number): boolean {
   let made = false;
   for (let i=0;i<steps;i++) {
     const previous = { ...ball.position };
-    ball.position.x += ball.velocity.x * h;
-    ball.position.y += ball.velocity.y * h - .5 * BALL.gravity * h * h;
-    ball.position.z += ball.velocity.z * h;
-    ball.velocity.y -= BALL.gravity * h;
+    let remaining=h;
+    for(let impact=0;impact<4 && remaining>1e-8;impact++) {
+      const v=ball.velocity, p=ball.position;
+      const next={x:p.x+v.x*remaining,y:p.y+v.y*remaining-.5*BALL.gravity*remaining*remaining,z:p.z+v.z*remaining};
+      const hit=sweepBoard(p,next);
+      const elapsed=hit ? remaining*hit.t : remaining;
+      ball.velocity.y-=BALL.gravity*elapsed;
+      ball.position=hit ? hit.position : next;
+      remaining-=elapsed;
+      if(hit) respond(ball,hit.normal,0,CONTACT.boardRestitution,'board');
+      else break;
+    }
     collideBall(ball);
     if (detectBasket(previous, ball)) made = true;
     const drag = Math.exp(-(ball.mode === 'loose' && ball.position.y < BALL.radius + BALL.floorY + .04 ? 1.8 : 0) * h);

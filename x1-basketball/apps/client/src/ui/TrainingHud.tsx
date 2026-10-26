@@ -41,7 +41,7 @@ export function TrainingHud({ controller }: { controller: LocalGameController })
     </div>}
     <div className="training-help">
       <span><kbd>W A S D</kbd> Mover</span><span><kbd>Shift</kbd> Correr</span>
-      <span><kbd>Espaço</kbd> Segurar e soltar para arremessar</span><span><kbd>R</kbd> Recuperar bola</span>
+      <span><kbd>Espaço</kbd> Segurar / soltar</span><span><kbd>E</kbd> Finalizar</span><span><kbd>F</kbd> Finta</span><span><kbd>R</kbd> Recuperar</span>
     </div>
   </>;
 }

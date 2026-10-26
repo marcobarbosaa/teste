@@ -13,8 +13,8 @@ export function Basketball({ controller }: { controller: GameController }) {
     group.current.rotation.set(ball.spin, ball.spin * .21, .3);
   });
   return <group ref={group} name="basketball">
-    <mesh castShadow><sphereGeometry args={[BALL.radius, 32, 24]}/><meshStandardMaterial color="#cb641f" roughness={.86}/></mesh>
+    <mesh castShadow><sphereGeometry args={[BALL.radius-.0018, 32, 24]}/><meshStandardMaterial color="#cb641f" roughness={.86}/></mesh>
     {[[0, 0, 0], [Math.PI / 2, 0, 0], [0, Math.PI / 2, 0], [0, Math.PI / 4, 0]].map((rotation, i) =>
-      <mesh key={i} rotation={rotation as [number, number, number]}><torusGeometry args={[BALL.radius + .0003, .0018, 4, 64]}/><meshStandardMaterial color="#30281f" roughness={1}/></mesh>)}
+      <mesh key={i} rotation={rotation as [number, number, number]}><torusGeometry args={[BALL.radius-.0018, .0018, 4, 64]}/><meshStandardMaterial color="#30281f" roughness={1}/></mesh>)}
   </group>;
 }

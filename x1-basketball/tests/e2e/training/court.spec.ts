@@ -8,7 +8,7 @@ for (const size of [{ width: 1366, height: 768 }, { width: 1920, height: 1080 }]
     const bounds = await page.locator('canvas').boundingBox();
     expect(bounds?.width).toBe(size.width); expect(bounds?.height).toBe(size.height);
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.screenshot({ path: 'artifacts/treino-' + size.width + '.png' });
+    await page.screenshot({ path: 'artifacts/v3-quadra-' + size.width + '.png' });
     expect(errors).toEqual([]);
   });
 }

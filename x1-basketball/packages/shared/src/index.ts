@@ -12,4 +12,8 @@ export * from './gameplay/shooting';
 export * from './gameplay/scoring';
 export * from './gameplay/collisions';
 export * from './gameplay/possession';
+export * from './gameplay/boardCollision';
+export * from './gameplay/locomotion';
+export * from './gameplay/actions';
+export * from './gameplay/random';
 

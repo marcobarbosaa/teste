@@ -17,6 +17,8 @@ export function FollowCamera({ controller }: { controller: GameController }) {
       const wantedYaw = cameraYaw(player.x, player.z);
       yaw.current += angleDelta(yaw.current, wantedYaw) * (1 - Math.exp(-CAMERA.yawSmoothing * Math.min(delta, .1)));
       const pose = cameraPose(player.x, player.z, yaw.current);
+      const lift=player.y??0;
+      pose.position.y+=lift*.35;pose.target.y+=lift*.35;
       const blend = initialized.current ? 1 - Math.exp(-CAMERA.smoothing * Math.min(delta, .1)) : 1;
       camera.position.lerp(offset.current.set(pose.position.x, pose.position.y, pose.position.z), blend);
       target.current.lerp(offset.current.set(pose.target.x, pose.target.y, pose.target.z), blend);

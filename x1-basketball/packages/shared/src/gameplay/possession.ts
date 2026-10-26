@@ -1,5 +1,6 @@
 import { BALL, TRAINING } from './config';
 import type { BallState, VisualPlayer } from './types';
+import { outsideBoard, sweepBoard } from './boardCollision';
 export function createBall(): BallState {
   return { position: { x: .46, y: 1.04, z: 1.28 }, velocity: {x:0,y:0,z:0}, mode: 'held', spin: 0, shotId: 0, scored: false, gateEntered: false, lastContact: 'none', contactSerial: 0 };
 }
@@ -15,9 +16,8 @@ export function possessionBall(ball: BallState, player: VisualPlayer, phase: num
     y: charging ? 1.94 : dribbling ? BALL.floorY + BALL.radius + .88 * Math.abs(Math.sin(phase)) : 1.04,
     z: player.z + right.z * side + forward.z * front,
   };
-  ball.position.x += (target.x - ball.position.x) * blend;
-  ball.position.y += (target.y - ball.position.y) * blend;
-  ball.position.z += (target.z - ball.position.z) * blend;
+  const next={x:ball.position.x+(target.x-ball.position.x)*blend,y:ball.position.y+(target.y-ball.position.y)*blend,z:ball.position.z+(target.z-ball.position.z)*blend};
+  ball.position=snap ? outsideBoard(next) : sweepBoard(ball.position,next)?.position ?? outsideBoard(next);
   ball.velocity = { x: 0, y: 0, z: 0 };
   player.handHeight = Math.max(.85, ball.position.y + BALL.radius);
   if (dribbling) ball.spin += player.speed * dt * 2.4;

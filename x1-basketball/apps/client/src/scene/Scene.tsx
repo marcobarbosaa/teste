@@ -1,5 +1,5 @@
 ﻿import { Canvas, useFrame } from '@react-three/fiber';
-import { memo, useCallback, useState } from 'react';
+import { lazy, Suspense, memo, useCallback, useState } from 'react';
 import { PCFSoftShadowMap } from 'three';
 import { CAMERA, type PlayerId } from '@x1/shared';
 import { Court } from './Court';
@@ -10,6 +10,7 @@ import { StreetEnvironment } from './StreetEnvironment';
 import { GraphicsGuard } from './GraphicsGuard';
 import { Basketball } from './Basketball';
 import type { GameController } from '../game/GameController';
+const PhysicsDebug=import.meta.env.DEV?lazy(()=>import('./PhysicsDebug').then(m=>({default:m.PhysicsDebug}))):()=>null;
 function SimulationLoop({ controller }: { controller: GameController }) {
   useFrame((_, delta) => controller.advance(delta), -2);
   return null;
@@ -26,6 +27,7 @@ export const Scene = memo(function Scene({ controller, ids, active }: { controll
     <directionalLight position={[-10, 18, 8]} intensity={2.7} castShadow shadow-mapSize={[1024, 1024]} shadow-camera-left={-18} shadow-camera-right={18} shadow-camera-top={18} shadow-camera-bottom={-18} shadow-normalBias={.035}/>
     <StreetEnvironment/><Court/><BasketballHoop/>
     <SimulationLoop controller={controller}/>
+    {import.meta.env.DEV && new URLSearchParams(location.search).get('physics')==='1' && <Suspense fallback={null}><PhysicsDebug controller={controller}/></Suspense>}
     {controller.mode === 'training' && <Basketball controller={controller}/>}
     {ids.split(',').filter(Boolean).map(id => <Player key={id} id={id as PlayerId} controller={controller}/>)}
     <FollowCamera controller={controller}/><GraphicsGuard onFailure={onFailure}/>

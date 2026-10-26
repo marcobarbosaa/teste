@@ -1,7 +1,7 @@
-import { BALL, HOOP } from './config';
+import { BALL, HOOP, CONTACT } from './config';
 import type { BallContact, BallState, Vec3 } from './types';
 
-function respond(ball: BallState, normal: Vec3, penetration: number, restitution: number, contact: BallContact) {
+export function respond(ball: BallState, normal: Vec3, penetration: number, restitution: number, contact: BallContact) {
   ball.position.x += normal.x * (penetration + .0001);
   ball.position.y += normal.y * (penetration + .0001);
   ball.position.z += normal.z * (penetration + .0001);
@@ -10,7 +10,7 @@ function respond(ball: BallState, normal: Vec3, penetration: number, restitution
     ball.velocity.x -= (1 + restitution) * dot * normal.x;
     ball.velocity.y -= (1 + restitution) * dot * normal.y;
     ball.velocity.z -= (1 + restitution) * dot * normal.z;
-    if (dot < -.2) { ball.lastContact = contact; ball.contactSerial++; }
+    if (dot < -.2) { ball.lastContact = contact; ball.contactSerial++; if(contact==='board')ball.boardHits=(ball.boardHits??0)+1; ball.contactNormal={...normal}; ball.contactPoint={x:ball.position.x-normal.x*BALL.radius,y:ball.position.y-normal.y*BALL.radius,z:ball.position.z-normal.z*BALL.radius}; }
   }
   if (contact === 'rim') ball.gateEntered = false;
 }
@@ -20,14 +20,14 @@ function box(ball: BallState, center: Vec3, half: Vec3, contact: BallContact) {
   const delta = { x: p.x - closest.x, y: p.y - closest.y, z: p.z - closest.z };
   const d = Math.hypot(delta.x, delta.y, delta.z);
   if (d >= BALL.radius) return;
-  if (d > .000001) respond(ball, { x: delta.x / d, y: delta.y / d, z: delta.z / d }, BALL.radius - d, .7, contact);
+  if (d > .000001) respond(ball, { x: delta.x / d, y: delta.y / d, z: delta.z / d }, BALL.radius - d, CONTACT.boardRestitution, contact);
   else {
     const faces = [
       { distance: half.x - Math.abs(p.x - center.x), normal: { x: p.x >= center.x ? 1 : -1, y: 0, z: 0 } },
       { distance: half.y - Math.abs(p.y - center.y), normal: { x: 0, y: p.y >= center.y ? 1 : -1, z: 0 } },
       { distance: half.z - Math.abs(p.z - center.z), normal: { x: 0, y: 0, z: p.z >= center.z ? 1 : -1 } },
     ].sort((a,b) => a.distance - b.distance);
-    respond(ball, faces[0].normal, BALL.radius + faces[0].distance, .7, contact);
+    respond(ball, faces[0].normal, BALL.radius + faces[0].distance, CONTACT.boardRestitution, contact);
   }
 }
 export function collideBall(ball: BallState) {

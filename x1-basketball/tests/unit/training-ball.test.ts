@@ -5,7 +5,7 @@ const advance = (sim: TrainingSimulation, seconds: number) => {
   for (let i = 0; i < Math.round(seconds / TRAINING.stepSeconds); i++) sim.step(TRAINING.stepSeconds);
 };
 function shoot(sim: TrainingSimulation, meter = SHOT.ideal) {
-  sim.command('charge'); advance(sim, SHOT.chargeSeconds * meter); sim.command('release');
+  sim.command('charge'); advance(sim, SHOT.chargeSeconds * meter); sim.command('release'); advance(sim,.2);
 }
 describe('treino: bola e resultado físico', () => {
   it('soltura precisa percorre uma parábola e contabiliza uma cesta apenas uma vez', () => {

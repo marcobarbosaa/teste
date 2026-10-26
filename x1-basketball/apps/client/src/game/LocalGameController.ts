@@ -1,4 +1,4 @@
-import { TRAINING, TrainingSimulation, type GameCommand, type MovementInput, type PlayerId, type VisualPlayer } from '@x1/shared';
+import { TRAINING, TrainingSimulation, outsideBoard, type GameCommand, type MovementInput, type PlayerId, type VisualPlayer } from '@x1/shared';
 import type { GameController } from './GameController';
 
 export class LocalGameController implements GameController {
@@ -39,12 +39,12 @@ export class LocalGameController implements GameController {
   sampleBall() {
     const ball = this.simulation.ball, alpha = this.accumulator / this.stepSeconds;
     const p = ball.position, previous = this.previousBall;
-    return { ...ball, position: { x: previous.x + (p.x - previous.x) * alpha, y: previous.y + (p.y - previous.y) * alpha, z: previous.z + (p.z - previous.z) * alpha } };
+    return { ...ball, position: outsideBoard({ x: previous.x + (p.x - previous.x) * alpha, y: previous.y + (p.y - previous.y) * alpha, z: previous.z + (p.z - previous.z) * alpha }) };
   }
   samplePlayer(id: PlayerId): VisualPlayer | undefined {
     if (id !== 'p1') return;
     const p = this.simulation.player, alpha = this.accumulator / this.stepSeconds;
-    return { ...p, x: this.previous.x + (p.x - this.previous.x) * alpha, z: this.previous.z + (p.z - this.previous.z) * alpha };
+    return { ...p, y:(this.previous.y??0)+((p.y??0)-(this.previous.y??0))*alpha, x: this.previous.x + (p.x - this.previous.x) * alpha, z: this.previous.z + (p.z - this.previous.z) * alpha };
   }
 }
 
